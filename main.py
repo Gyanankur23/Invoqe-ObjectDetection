@@ -43,11 +43,7 @@ class HealthResponse(BaseModel):
 @app.get("/")
 async def root():
     """Root endpoint - return HTML frontend"""
-    try:
-        return FileResponse('web_interface.html')
-    except Exception as e:
-        from fastapi.responses import HTMLResponse
-        return HTMLResponse(content=f"<h1>Error loading frontend: {str(e)}</h1><p>API is available at /api/health</p>", status_code=500)
+    return HTMLResponse(content=open('web_interface.html', 'r', encoding='utf-8').read())
 
 @app.get("/api", response_model=HealthResponse)
 async def api_root():
