@@ -65,7 +65,7 @@ async def health():
         message="API is ready"
     )
 
-@app.post("/detect", response_model=DetectionResponse)
+@app.post("/detect")
 async def detect_objects(
     file: UploadFile = File(...),
     conf_threshold: float = 0.5
