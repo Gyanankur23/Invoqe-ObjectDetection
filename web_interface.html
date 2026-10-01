@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection & Tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #e94560;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #e94560;
+            border-radius: 15px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .upload-area:hover {
+            background: rgba(233, 69, 96, 0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-area p {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e94560 0%, #c23a51 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .preview-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .image-container {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .image-container h3 {
+            color: white;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .image-container img {
+            width: 100%;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .image-container .placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            display: none;
+        }
+
+        .results-section h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .detection-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detection-item {
+            background: rgba(233, 69, 96, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .detection-item .class-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .detection-item .confidence {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #e94560;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .confidence-slider {
+            margin: 20px 0;
+            color: white;
+        }
+
+        .confidence-slider input {
+            width: 200px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Object Detection & Tracking</h1>
+    
+    <div class="container">
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <p>📁 Click to upload an image or drag and drop</p>
+                <button class="btn">Select Image</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+            
+            <div class="confidence-slider">
+                <label>Confidence Threshold: <span id="confValue">0.5</span></label>
+                <input type="range" id="confThreshold" min="0.1" max="0.9" step="0.1" value="0.5" onchange="updateConfValue()">
+            </div>
+            
+            <button class="btn" id="detectBtn" onclick="detectObjects()" disabled>Detect Objects</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Detecting objects...</p>
+        </div>
+        
+        <div class="preview-section">
+            <div class="image-container">
+                <h3>Original Image</h3>
+                <div class="placeholder" id="originalPlaceholder">No image selected</div>
+                <img id="originalImage" alt="Original">
+            </div>
+            <div class="image-container">
+                <h3>Detection Result</h3>
+                <div class="placeholder" id="resultPlaceholder">Detection result will appear here</div>
+                <img id="resultImage" alt="Detection Result">
+            </div>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <h3>Detection Results (<span id="objectCount">0</span> objects)</h3>
+            <div class="detection-list" id="detectionList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let selectedFile = null;
+
+        function updateConfValue() {
+            const value = document.getElementById('confThreshold').value;
+            document.getElementById('confValue').textContent = value;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                
+                // Display original image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const originalImage = document.getElementById('originalImage');
+                    const originalPlaceholder = document.getElementById('originalPlaceholder');
+                    
+                    originalImage.src = e.target.result;
+                    originalImage.style.display = 'block';
+                    originalPlaceholder.style.display = 'none';
+                    
+                    document.getElementById('detectBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function detectObjects() {
+            if (!selectedFile) return;
+
+            const confThreshold = parseFloat(document.getElementById('confThreshold').value);
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('detectBtn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                // Get detection info
+                const infoResponse = await fetch(`${API_URL}/detect/info?conf_threshold=${confThreshold}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const infoData = await infoResponse.json();
+
+                // Get detection image
+                formData = new FormData();
+                formData.append('file', selectedFile);
+                const imageResponse = await fetch(`${API_URL}/detect?conf_threshold=${confThreshold}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const imageBlob = await imageResponse.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+
+                // Display result image
+                const resultImage = document.getElementById('resultImage');
+                const resultPlaceholder = document.getElementById('resultPlaceholder');
+                
+                resultImage.src = imageUrl;
+                resultImage.style.display = 'block';
+                resultPlaceholder.style.display = 'none';
+
+                // Display detection results
+                const resultsSection = document.getElementById('resultsSection');
+                const detectionList = document.getElementById('detectionList');
+                const objectCount = document.getElementById('objectCount');
+                
+                objectCount.textContent = infoData.object_count;
+                detectionList.innerHTML = '';
+                
+                infoData.detections.forEach(det => {
+                    const item = document.createElement('div');
+                    item.className = 'detection-item';
+                    item.innerHTML = `
+                        <div class="class-name">${det.class_name}</div>
+                        <div class="confidence">Confidence: ${(det.confidence * 100).toFixed(1)}%</div>
+                    `;
+                    detectionList.appendChild(item);
+                });
+                
+                resultsSection.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error detecting objects. Please try again.');
+            }
+
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('detectBtn').disabled = false;
+        }
+
+        // Drag and drop support
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(233, 69, 96, 0.3)';
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(233, 69, 96, 0.1)';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(233, 69, 96, 0.1)';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: [file] } });
+            }
+        });
+    </script>
+</body>
+</html>
