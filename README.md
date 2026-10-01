@@ -119,6 +119,12 @@ Get list of all detectable classes.
 ### GET /health
 Health check endpoint.
 
+## Analysis Plots
+
+![Supported Classes](plots/supported_classes.png)
+
+![Model Metrics](plots/model_metrics.png)
+
 ## Methodology
 
 ### Object Detection
