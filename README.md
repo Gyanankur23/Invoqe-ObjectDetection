@@ -1,5 +1,8 @@
 # Task 3: Computer Vision - Object Detection & Tracking
 
+## Live Demo
+🚀 **Try the live application:** [https://invoqe-object-detection-h6pv1j3xf-gyanankur23s-projects.vercel.app/](https://invoqe-object-detection-h6pv1j3xf-gyanankur23s-projects.vercel.app/)
+
 ## Overview
 This project implements a computer vision system capable of detecting and tracking objects from images, videos, and webcam feeds using YOLO (You Only Look Once) model. It includes real-time object detection, object tracking with unique IDs, and a web interface for image-based detection.
 

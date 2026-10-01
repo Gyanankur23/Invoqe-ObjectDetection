@@ -270,7 +270,7 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('detectBtn').disabled = true;
 
-            const formData = new FormData();
+            let formData = new FormData();
             formData.append('file', selectedFile);
 
             try {
