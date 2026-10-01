@@ -123,11 +123,11 @@ async def detect_objects_info(
             raise HTTPException(status_code=400, detail="Invalid image file")
         
         # Return mock detection info
-        return DetectionResponse(
-            status="success",
-            object_count=0,
-            detections=[]
-        )
+        return {
+            "status": "success",
+            "object_count": 0,
+            "detections": []
+        }
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
