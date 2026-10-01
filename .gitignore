@@ -10,6 +10,7 @@ env/
 # Models and Data (large files)
 *.pkl
 *.h5
+*.csv
 *.pt
 *.pth
 *.onnx
@@ -19,6 +20,8 @@ env/
 *.jpeg
 # Allow plots/*.png
 !plots/*.png
+# Allow vercel.json
+!vercel.json
 
 # IDE
 .vscode/
