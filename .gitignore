@@ -17,7 +17,8 @@ env/
 *.avi
 *.jpg
 *.jpeg
-*.png
+# Allow plots/*.png
+!plots/*.png
 
 # IDE
 .vscode/
